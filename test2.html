@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+	    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=10" />
+		<title>Log Chart</title>        
+        
+      <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	  <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.9/require.min.js"></script> 	
+	  <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.3.3/d3.min.js"></script>
+        
+	    <style>
+		    body { font: 12px Arial;}
+
+		    path { 
+		        stroke: steelblue;
+		        stroke-width: 2;
+		        fill: none;
+		    }            
+            
+		    .axis path,
+		    .axis line {
+		        fill: none;
+		        stroke: grey;
+		        stroke-width: 1;
+		        shape-rendering: crispEdges;
+		    }
+
+		    .brush .extent {
+		        stroke: #fff;
+		        fill-opacity: .125;
+		        shape-rendering: crispEdges;
+		    }		    
+			.loader {
+	            position: absolute;
+	            top: 0;
+	            bottom: 0;
+	            left: 0;
+	            right: 0;
+	            background: rgba(255,255,255,0.8);
+	            text-align: center;
+	            z-index: 99;
+	            display: none;
+	        }
+            .loader p {
+                margin-top: 180px;
+            }
+		</style>
+
+		<script type="text/javascript">
+			'use strict';
+function getLight(value) {
+  var values = value.split(" ");
+  if(values.length < 3) return false;
+  if(values[1] != 5) return false;
+  if(values[2][0] != "[") return false;
+  return true;
+}
+
+function getAccel(value) {
+  var values = value.split(" ");
+  if(values.length < 3) return false;
+  if(values[1] != 1) return false;
+  if(values[2][0] != "[") return false;
+  return true;
+}
+		
+		    $(function () {
+
+		        requirejs.config({
+		            "baseUrl": "./",
+		            "paths": {
+		                "app": "./",
+		                'moment': 'http://cdnjs.cloudflare.com/ajax/libs/moment.js/2.2.1/moment.min',
+		                'underscore': 'http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min'		                
+		            }
+		        });
+		        var light1 = []; 
+		        var accelx = [];
+		        var accely = [];
+		        var accelz = [];
+		        d3.text("2014-01-23_14-51-59.txt", "text/plain", function(error, data) {
+		        	var rows = data.split("\n");
+		        	var light_rows = rows.filter(getLight);
+		        	light_rows.forEach(function(d) { 
+		        		var sp = d.split(" ")
+		        		var date = parseInt(sp[0]);
+        				var value = parseFloat(sp[2].substr(1).split(",")[0]);
+        				light1.push({"DateTime":date, "Value":value});
+		        	});
+		        	var accel_rows = rows.filter(getAccel);
+		        	accel_rows.forEach(function(d) { 
+		        		var sp = d.split(" ")
+		        		var date = parseInt(sp[0]);
+        				var value = parseFloat(sp[2].substr(1).split(",")[0]);
+        				accelx.push({"DateTime":date, "Value":value});
+        				value = parseFloat(sp[3].split(",")[0]);
+        				accely.push({"DateTime":date, "Value":value});
+        				value = parseFloat(sp[4].split(",")[0].split("]")[0]);
+        				accelz.push({"DateTime":date, "Value":value});
+		        	});
+		        });
+		        console.log(light1);
+
+		        setTimeout(function() { 
+		        require(['app/d3.chart'], function (d3Chart) {
+		            d3Chart.init({ container: '#container', xDim: 'DateTime' });
+		          // d3Chart.addGraph({ id: 'Speed', type: 'horizon', name: 'Speed', dataId: 512, yVal: ['Value'], data: speedData });
+		            d3Chart.addGraph({ id: 'light', type: 'analog', name: 'Light', dataId: 513, yVal: ['Value'], data: light1 });
+		            d3Chart.addGraph({ id: 'accel-x', type: 'analog', name: 'Accel-X', dataId: 514, yVal: ['Value'], data: accelx });
+		            d3Chart.addGraph({ id: 'accel-y', type: 'analog', name: 'Accel-Y', dataId: 515, yVal: ['Value'], data: accely });
+		            d3Chart.addGraph({ id: 'accel-z', type: 'analog', name: 'Accel-Z', dataId: 516, yVal: ['Value'], data: accelz });
+		            //d3Chart.addGraph({ id: 'Clicks', type: 'analog', name: 'RPM2', dataId: 513, yVal: ['Value'], data: imps2 });
+				//d3Chart.addGraph({ id: 'CTR', type: 'analog', name: 'CTR', dataId: 513, yVal: ['Value'], data: CTR });
+		         //   d3Chart.addGraph({ id: 'DI', type: 'digital', name: 'Digital Input', dataId: 522, data: diData });
+		            
+		     //       d3Chart.addGraph({ id: 'Accel', type: 'analog', name: 'Accel', dataId: 522, yVal: ['X', 'Y', 'Z'], data: accelData });
+					d3Chart.render();		            		           
+
+		            /*setTimeout(function () {	
+		                d3Chart.reorderGraph('Accel', 'up');
+		                
+		                //window.setTimeout(function () {
+		                //    d3Chart.removeGraph('RPM');
+		                //}, 2000);
+		                
+		            }, 3000);*/
+
+
+		        });}, 1000);
+
+		    });
+
+		</script>
+	</head>
+	<body>
+	    <script src="./sample_data.js"></script>
+
+	    <div id="container" style="min-width: 300px;width:100%">
+			<div class="loader"><p>Working...</p></div>
+		</div>
+        
+	</body>
+</html>
