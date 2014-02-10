@@ -8,6 +8,7 @@
       <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
 	  <script src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.9/require.min.js"></script> 	
 	  <script src="http://cdnjs.cloudflare.com/ajax/libs/d3/3.3.3/d3.min.js"></script>
+	  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
         
 	    <style>
 		    body { font: 12px Arial;}
@@ -105,16 +106,10 @@ function getAccel(value) {
 		        setTimeout(function() { 
 		        require(['app/d3.chart'], function (d3Chart) {
 		            d3Chart.init({ container: '#container', xDim: 'DateTime' });
-		          // d3Chart.addGraph({ id: 'Speed', type: 'horizon', name: 'Speed', dataId: 512, yVal: ['Value'], data: speedData });
 		            d3Chart.addGraph({ id: 'light', type: 'analog', name: 'Light', dataId: 513, yVal: ['Value'], data: light1 });
 		            d3Chart.addGraph({ id: 'accel-x', type: 'analog', name: 'Accel-X', dataId: 514, yVal: ['Value'], data: accelx });
 		            d3Chart.addGraph({ id: 'accel-y', type: 'analog', name: 'Accel-Y', dataId: 515, yVal: ['Value'], data: accely });
 		            d3Chart.addGraph({ id: 'accel-z', type: 'analog', name: 'Accel-Z', dataId: 516, yVal: ['Value'], data: accelz });
-		            //d3Chart.addGraph({ id: 'Clicks', type: 'analog', name: 'RPM2', dataId: 513, yVal: ['Value'], data: imps2 });
-				//d3Chart.addGraph({ id: 'CTR', type: 'analog', name: 'CTR', dataId: 513, yVal: ['Value'], data: CTR });
-		         //   d3Chart.addGraph({ id: 'DI', type: 'digital', name: 'Digital Input', dataId: 522, data: diData });
-		            
-		     //       d3Chart.addGraph({ id: 'Accel', type: 'analog', name: 'Accel', dataId: 522, yVal: ['X', 'Y', 'Z'], data: accelData });
 					d3Chart.render();		            		           
 
 		            /*setTimeout(function () {	
@@ -128,14 +123,15 @@ function getAccel(value) {
 
 
 		        });}, 1000);
-
 		    });
 
 		</script>
 	</head>
 	<body>
 	    <script src="./sample_data.js"></script>
-
+		<div id="images" stype="min-width:300px; width:100%">
+			<img id="pic" src="images/image_0001.png" />
+		</div>    
 	    <div id="container" style="min-width: 300px;width:100%">
 			<div class="loader"><p>Working...</p></div>
 		</div>

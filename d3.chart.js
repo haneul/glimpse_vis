@@ -97,6 +97,8 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                     var dt = _xScale.invert(mX);
                     var nearestDateVal = minDistanceDate(_.map(_graphs, function (d) { return d.map[mX] ? d.map[mX].date : null; }), dt);
                     var graphIdswithDataAtNearestDate = _.chain(_graphs).filter(function(d) { return d.map[mX] && d.map[mX].date == nearestDateVal; }).pluck('id').value();
+                    console.log(nearestDateVal);
+                    console.log(graphIdswithDataAtNearestDate);
                     if (nearestDateVal!=null) {
                         var xMoment = moment(nearestDateVal);
                         //update legend values 
@@ -113,9 +115,14 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                             g.select('.legend').text(d.id + ' : ' + str);
                         });
                         //move plot line to stick to nearest time where any value found , then update time and value legends                    
-                        timeLegend.text(xMoment.format('DD MMM'));
+                        timeLegend.text(xMoment.format('DD MMM h:mm:ss'));
                         var moveX = _xScale(xMoment);
                         hoverLine.attr('x1', moveX).attr('x2', moveX);
+                        console.log(nearestDateVal);
+                        var duration = Math.floor((nearestDateVal - 1390517520044)/30);
+                        console.log(duration);
+                        var zero = d3.format("04d");
+                        jQuery("#pic").attr('src','images/image_'+zero(duration)+'.png');
                     }                    
                 } 
             });
