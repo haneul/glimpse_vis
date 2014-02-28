@@ -65,6 +65,14 @@ function getAccel(value) {
   if(values[2][0] != "[") return false;
   return true;
 }
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+    results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
 		
 		    $(function () {
 
@@ -76,11 +84,22 @@ function getAccel(value) {
 		                'underscore': 'http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.2/underscore-min'		                
 		            }
 		        });
+                var data_source;
+                var source_filename = getParameterByName("data");
+                if(source_filename != null)
+                {
+                    source_filename = source_filename + ".json";
+                }
+                else
+                {
+                    source_filename = "data1.json";
+                }
+                $.getJSON(source_filename, function(response) { data_source = response; 
 		        var light1 = []; 
 		        var accelx = [];
 		        var accely = [];
 		        var accelz = [];
-		        d3.text("2014-01-23_14-51-59.txt", "text/plain", function(error, data) {
+		        d3.text(data_source.filename, "text/plain", function(error, data) {
 		        	var rows = data.split("\n");
 		        	var light_rows = rows.filter(getLight);
 		        	light_rows.forEach(function(d) { 
@@ -101,7 +120,7 @@ function getAccel(value) {
         				accelz.push({"DateTime":date, "Value":value});
 		        	});
 		        });
-		        console.log(light1);
+		        //console.log(light1);
 
 		        setTimeout(function() { 
 		        require(['app/d3.chart'], function (d3Chart) {
@@ -123,12 +142,11 @@ function getAccel(value) {
 
 
 		        });}, 1000);
-		    });
+		    }); });
 
 		</script>
 	</head>
 	<body>
-	    <script src="./sample_data.js"></script>
 		<div id="images" stype="min-width:300px; width:100%">
 			<img id="pic" src="images/image_0001.png" />
 		</div>    
