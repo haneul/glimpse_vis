@@ -15,6 +15,7 @@
 define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', 'app/d3.chart.horizon'], function (moment) {
 
     var _container, _graphs = [];
+    var _images = "";
 
     //chart d3 config
     var _svgContainer, _chartCanvas, _xScale, _xDomain = [Infinity, -Infinity];
@@ -30,6 +31,7 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
 
     this.init = function (options) {
         _container = options.container;
+        console.log(options);
         containerWidth = $(_container).width();
         width = containerWidth - margin.left - margin.right;
 
@@ -122,7 +124,8 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                         var duration = Math.floor((nearestDateVal - 1390517520044)/30);
                         console.log(duration);
                         var zero = d3.format("04d");
-                        jQuery("#pic").attr('src','images/image_'+zero(duration)+'.png');
+                        console.log(options);
+                        jQuery("#pic").attr('src',options.images+'/image_'+zero(duration)+'.png');
                     }                    
                 } 
             });

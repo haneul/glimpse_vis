@@ -95,6 +95,7 @@ function getParameterByName(name) {
                     source_filename = "data1.json";
                 }
                 $.getJSON(source_filename, function(response) { data_source = response; 
+                console.log(data_source);
 		        var light1 = []; 
 		        var accelx = [];
 		        var accely = [];
@@ -124,7 +125,7 @@ function getParameterByName(name) {
 
 		        setTimeout(function() { 
 		        require(['app/d3.chart'], function (d3Chart) {
-		            d3Chart.init({ container: '#container', xDim: 'DateTime' });
+		            d3Chart.init({ container: '#container', xDim: 'DateTime', images:'images' });
 		            d3Chart.addGraph({ id: 'light', type: 'analog', name: 'Light', dataId: 513, yVal: ['Value'], data: light1 });
 		            d3Chart.addGraph({ id: 'accel-x', type: 'analog', name: 'Accel-X', dataId: 514, yVal: ['Value'], data: accelx });
 		            d3Chart.addGraph({ id: 'accel-y', type: 'analog', name: 'Accel-Y', dataId: 515, yVal: ['Value'], data: accely });
@@ -141,14 +142,14 @@ function getParameterByName(name) {
 		            }, 3000);*/
 
 
-		        });}, 1000);
+		        });}, 3000);
 		    }); });
 
 		</script>
 	</head>
 	<body>
 		<div id="images" stype="min-width:300px; width:100%">
-			<img id="pic" src="images/image_0001.png" />
+			<img id="pic" />
 		</div>    
 	    <div id="container" style="min-width: 300px;width:100%">
 			<div class="loader"><p>Working...</p></div>
