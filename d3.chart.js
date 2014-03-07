@@ -44,6 +44,78 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
         }
         return curI;
     };
+    var ColorTable = [];
+    var hueStart = 260;
+    var hueEnd = 300;
+    var ColorTableSize = 256;
+    function RgbFromHsl(hue, saturation, luminosity)
+    {
+        if (hue < 0)
+            hue = (360 - (-hue % 360)) % 360;
+        else
+            hue %= 360;
+        var chroma = (1 - Math.abs(2 * luminosity - 1)) * saturation;
+        var middle = chroma * (1.0 - Math.abs((hue % 120) / 60.0 - 1));
+        var minimum = luminosity - 0.5 * chroma; 
+        var section = Math.floor(hue / 60);
+
+        var r, g, b;
+        switch (section) {
+            case 0:
+                r = chroma; g = middle; b = 0;
+                break;
+            case 1:
+                r = middle; g = chroma; b = 0;
+                break;
+            case 2:
+                r = 0; g = chroma; b = middle;
+                break;
+            case 3:
+                r = 0; g = middle; b = chroma;
+                break;
+            case 4:
+                r = middle; g = 0; b = chroma;
+                break;
+            default:
+                r = chroma; g = 0; b = middle;
+                break;
+        }
+
+        // Add minimum offset to each component
+        r += minimum; g += minimum; b += minimum;
+        var br = Math.floor(r * 256), bg = Math.floor(g * 256), bb = Math.floor(b * 256);
+        if (br > 255) br = 255;
+        if (br < 0) br = 0;
+        if (bg > 255) bg = 255;
+        if (bg < 0) bg = 0;
+        if (bb > 255) bb = 255;
+        if (bb < 0) bb = 0;
+
+        return "rgb("+br+","+bg+","+bb+")";
+    }
+
+    function ColorFromTemperature(temperature) {
+        var MinimumTemperature = 0;
+        var MaximumTemperature = 45;
+        console.log(temperature);
+        if(temperature < MinimumTemperature) temperature = MinimumTemperature;
+        if(temperature > MaximumTemperature) temperature = MaximumTemperature;
+        temperature = ColorTableSize * (temperature - MinimumTemperature) / (MaximumTemperature - MinimumTemperature);
+        if (temperature < 0)
+            temperature = 0;
+        else if (temperature > ColorTableSize - 1)
+            temperature = ColorTableSize - 1;
+        //console.log(ColorTable);
+        return ColorTable[Math.floor(temperature)];
+    }
+
+    for (var i = 0; i < ColorTableSize; i++) {
+        var s = i / ColorTableSize;
+        ColorTable[i] =
+                s < 0.2 ? RgbFromHsl(hueStart, s / 0.2, s) :
+                        s > 0.8 ? RgbFromHsl(hueEnd, (1.0 - s) / 0.2, s) :
+                                RgbFromHsl((hueStart - ((s - 0.2) / 0.6) * (360 - hueEnd + hueStart)), 1.0, 0.5);
+    }
 
     this.init = function (options) {
         _container = options.container;
@@ -95,6 +167,16 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
             .text('time:');
         
         var _marker = null;
+        var svg = d3.select('#hid').append('svg').attr('width',150).attr('height',350);
+        console.log(svg);
+        for(var i=0;i<4;i++)
+        {
+            for(var j=0;j<16;j++)
+            {
+                svg.append('rect').attr('class','hidrect')
+                    .attr('width',30).attr('height',20).attr('x',30*i).attr('y',20*j).attr('i',i).attr('j',j);
+            }
+        }
 
         _svgContainer// mouse event not working on _chartCanvas
             .on('mouseover', function () {
@@ -130,11 +212,19 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                     });
                     _marker.setMap(options.map);
                     options.map.setCenter(latlng);
-                    console.log(options.pics);
+                    //console.log(options.pics);
                     var pic_ts = options.pics[findIndex(options.pics, t, 0, options.pics.length, function(d) { return d; } )];
-                    console.log(t)
-                    console.log(pic_ts);
                     jQuery("#pic").attr('src',options.images+pic_ts+'.jpg');
+                    var hid = options.hid[findIndex(options.hid, t, 0, options.hid.length, function(d) {return d[0];})].slice(2);
+
+                    d3.selectAll('.hidrect').each(function(d) {
+                        var x = d3.select(this);
+                        var i = parseInt(x.attr('i'));
+                        var j = parseInt(x.attr('j'));
+                        var col = ColorFromTemperature(hid[(15-j)*4+(3-i)]);
+                        console.log(col);
+                        x.style('fill', col);
+                    });
 
                     /*var nearestDateVal = minDistanceDate(_.map(_graphs, function (d) { console.log(d.map); return d.map[mX] ? d.map[mX].date : null; }), dt);
                     var graphIdswithDataAtNearestDate = _.chain(_graphs).filter(function(d) { return d.map[mX] && d.map[mX].date == nearestDateVal; }).pluck('id').value();
@@ -238,7 +328,6 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
     //returns a date from dates array which is nearest from dt
     function minDistanceDate(dates, dt) {
         var result = null, distance = Infinity, dtVal=moment(dt).valueOf();
-        console.log(dates);
         _.each(dates, function(d) {
             var m;
             try {
@@ -279,11 +368,7 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
         var startIndex =0;
         var endIndex = graph.data.length-1;
         //console.log(xScale.domain())
-        console.log(startIndex);
-        console.log(endIndex);
-        console.log(_.chain(graph.data).rest(startIndex))
         var data = _.chain(graph.data).rest(startIndex).initial(endIndex - startIndex).value();
-        console.log(data);
         var dates = _.map(data, function (d) { return moment(d.DateTime).valueOf(); });
         var cursorIndex = 0;// for skipping records on subsequent search
         
@@ -312,7 +397,6 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
     this.addGraph = function (graph) {        
         //adjust x-axis domain
         var dates = _.map(graph.data, function (d) { return moment(d.DateTime).valueOf(); });
-        console.log(dates);
         var min = dates[0], max = dates[dates.length - 1], streched = false; // assuming data is sorted        
         if (min < _xDomain[0]) {
             _xDomain[0] = min;

@@ -120,11 +120,12 @@ function initialize() {
 		        var accelz = [];
                 var locs = [];
                 var pics = [];
+                var hid = [];
                 d3.text(data_source.dir+"/loc.txt", "text/plain", function(error,data) {
 		        	var rows = data.split("\n");
                     rows.forEach(function (d) {
                         var sp = d.split(" ");
-                        if(sp[1] == "gps")
+                        //if(sp[1] == "gps")
                         locs.push({"ts": parseInt(sp[0]), "lat": parseFloat(sp[3]), "lng": parseFloat(sp[4])});
                     });
                 });
@@ -132,6 +133,16 @@ function initialize() {
                     data.split("\n").forEach(function (d) {
                         pics.push(parseInt(d));
                     });
+                });
+
+                d3.text(data_source.dir+"/hid.txt", "text/plain", function(error,data) {
+                    var rows = data.split("\n");
+                    rows.forEach(function(d) {
+                        var vals = d.split(" ").map(function(v) {return parseFloat(v);});
+                        if(vals[2] > 100) return;
+                        hid.push(vals);
+                    });
+                    console.log(hid);
                 });
 
 		        d3.text(data_source.dir+"/sensor.txt", "text/plain", function(error, data) {
@@ -159,7 +170,7 @@ function initialize() {
 
 		        setTimeout(function() { 
 		        require(['app/d3.chart'], function (d3Chart) {
-		            d3Chart.init({ container: '#container', xDim: 'DateTime', images:data_source.dir+"/pic/", start:data_source.start, locs:locs, map:map, pics:pics });
+		            d3Chart.init({ container: '#container', xDim: 'DateTime', images:data_source.dir+"/pic/", start:data_source.start, locs:locs, map:map, pics:pics, hid:hid });
 		            d3Chart.addGraph({ id: 'light', type: 'analog', name: 'Light', dataId: 513, yVal: ['Value'], data: light1 });
 		            d3Chart.addGraph({ id: 'accel-x', type: 'analog', name: 'Accel-X', dataId: 514, yVal: ['Value'], data: accelx });
 		            d3Chart.addGraph({ id: 'accel-y', type: 'analog', name: 'Accel-Y', dataId: 515, yVal: ['Value'], data: accely });
@@ -185,6 +196,8 @@ function initialize() {
 		<div id="images" style="min-width:300px; width:300px; float:left;">
 			<img id="pic" width="300px" />
 		</div>    
+        <div id="hid" style="float:left;">
+        </div>
         <div id="map-canvas"></div>
 	    <div id="container" style="min-width: 300px;width:100%">
 			<div class="loader"><p>Working...</p></div>
