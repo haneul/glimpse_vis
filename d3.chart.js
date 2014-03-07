@@ -28,6 +28,22 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
     var logChartHeight = 100, diChartHeight = 20;
     var gap = 30;
     var color = d3.scale.category10();
+    var findIndex = function(locs, val, start, end, fn) {
+        if(start == end-1) 
+        {
+            return start;
+        }
+        var curI = Math.floor((start+end)/2);
+        var target = fn(locs[curI]);
+        if(val > target) {
+            return findIndex(locs, val, curI, end, fn);
+        }
+        else if(val < target)
+        {
+            return findIndex(locs, val, start, curI, fn);
+        }
+        return curI;
+    };
 
     this.init = function (options) {
         _container = options.container;
@@ -78,6 +94,7 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
             .attr('text-anchor', 'end')
             .text('time:');
         
+        var _marker = null;
 
         _svgContainer// mouse event not working on _chartCanvas
             .on('mouseover', function () {
@@ -97,7 +114,29 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                 hoverLine.attr('x1', mX).attr('x2', mX);
                 if (mX > 0 && mY > 0 && mX < width) { 
                     var dt = _xScale.invert(mX);
-                    var nearestDateVal = minDistanceDate(_.map(_graphs, function (d) { return d.map[mX] ? d.map[mX].date : null; }), dt);
+                    var t = dt.getTime();
+                    timeLegend.text(moment(dt).format('DD MMM h:mm:ss'));
+
+                    // set map marker 
+                    var obj = options.locs[findIndex(options.locs, t, 0, options.locs.length, function(d) { return d.ts; })]; 
+                    var latlng = new google.maps.LatLng(obj.lat, obj.lng);
+                    if(_marker != null) {
+                            _marker.setMap(null);
+                    }
+                    _marker = new google.maps.Marker({
+                            position: latlng,
+                            map: options.map,
+                            title: "cur"
+                    });
+                    _marker.setMap(options.map);
+                    options.map.setCenter(latlng);
+                    console.log(options.pics);
+                    var pic_ts = options.pics[findIndex(options.pics, t, 0, options.pics.length, function(d) { return d; } )];
+                    console.log(t)
+                    console.log(pic_ts);
+                    jQuery("#pic").attr('src',options.images+pic_ts+'.jpg');
+
+                    /*var nearestDateVal = minDistanceDate(_.map(_graphs, function (d) { console.log(d.map); return d.map[mX] ? d.map[mX].date : null; }), dt);
                     var graphIdswithDataAtNearestDate = _.chain(_graphs).filter(function(d) { return d.map[mX] && d.map[mX].date == nearestDateVal; }).pluck('id').value();
                     console.log(nearestDateVal);
                     console.log(graphIdswithDataAtNearestDate);
@@ -116,17 +155,31 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                             }                            
                             g.select('.legend').text(d.id + ' : ' + str);
                         });
+                        var obj = options.locs[findIndex(options.locs, nearestDateVal, 0, options.locs.length)]; 
+                        var latlng = new google.maps.LatLng(obj.lat, obj.lng);
+                        if(_marker != null) {
+                                _marker.setMap(null);
+                        }
+                        _marker = new google.maps.Marker({
+                                position: latlng,
+                                map: options.map,
+                                title: "cur"
+                        });
+                        _marker.setMap(options.map);
+                        options.map.setCenter(latlng);
+                        //console.log(options.locs[index]);
+                        //console.log(options.map);
                         //move plot line to stick to nearest time where any value found , then update time and value legends                    
                         timeLegend.text(xMoment.format('DD MMM h:mm:ss'));
                         var moveX = _xScale(xMoment);
                         hoverLine.attr('x1', moveX).attr('x2', moveX);
-                        console.log(nearestDateVal);
-                        var duration = Math.floor((nearestDateVal - 1390517520044)/30);
-                        console.log(duration);
+                        //console.log(nearestDateVal);
+                        var duration = Math.floor((nearestDateVal - (options.start))/30);
+                        //console.log(duration);
                         var zero = d3.format("04d");
-                        console.log(options);
-                        jQuery("#pic").attr('src',options.images+'/image_'+zero(duration)+'.png');
-                    }                    
+                        //console.log(options);
+                        jQuery("#pic").attr('src',options.images+'/images_'+zero(duration)+'.png');
+                    }                    */
                 } 
             });
         
@@ -185,12 +238,20 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
     //returns a date from dates array which is nearest from dt
     function minDistanceDate(dates, dt) {
         var result = null, distance = Infinity, dtVal=moment(dt).valueOf();
+        console.log(dates);
         _.each(dates, function(d) {
+            var m;
+            try {
             var m = moment(d).valueOf();
             if (distance > Math.abs(m - dtVal)) {
                 distance = Math.abs(m - dtVal);
                 result = d;
             }                
+            }
+            catch(err) {
+                result = -1; 
+
+            }
         });
         return result;
     }
@@ -212,10 +273,17 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
         
         //hashmap for fast lookup with mousemove (plotline)
         var map = [];
-        var startIndex = _.sortedIndex(graph.data, xScale.domain()[0], function (v) { return moment(v).valueOf(); });
-        var endIndex = _.sortedIndex(graph.data, xScale.domain()[1], function (v) { return moment(v).valueOf(); });
+        // may need to change for smaller domain than width
+        //var startIndex = _.sortedIndex(graph.data, xScale.domain()[0], function (v) { return moment(v).valueOf(); });
+        //var endIndex = _.sortedIndex(graph.data, xScale.domain()[1], function (v) { return moment(v).valueOf(); });
+        var startIndex =0;
+        var endIndex = graph.data.length-1;
+        //console.log(xScale.domain())
+        console.log(startIndex);
+        console.log(endIndex);
+        console.log(_.chain(graph.data).rest(startIndex))
         var data = _.chain(graph.data).rest(startIndex).initial(endIndex - startIndex).value();
-        
+        console.log(data);
         var dates = _.map(data, function (d) { return moment(d.DateTime).valueOf(); });
         var cursorIndex = 0;// for skipping records on subsequent search
         
@@ -244,6 +312,7 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
     this.addGraph = function (graph) {        
         //adjust x-axis domain
         var dates = _.map(graph.data, function (d) { return moment(d.DateTime).valueOf(); });
+        console.log(dates);
         var min = dates[0], max = dates[dates.length - 1], streched = false; // assuming data is sorted        
         if (min < _xDomain[0]) {
             _xDomain[0] = min;
@@ -260,6 +329,7 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
             //calculate all graphs hashmaps as x-scale changed for new graph data
             _.each(_graphs, function (g) {
                 g.map = getLookupMap(g, _xScale);
+                console.log(g.map);
             });
         }
 
