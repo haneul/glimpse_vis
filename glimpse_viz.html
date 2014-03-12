@@ -102,13 +102,13 @@ function initialize() {
 		        });
                 var data_source;
                 var source_filename = getParameterByName("data");
-                if(source_filename != null)
+                if(source_filename != null && source_filename.length > 0)
                 {
                     source_filename = source_filename + ".json";
                 }
                 else
                 {
-                    source_filename = "data3.json";
+                    source_filename = "example.json";
                 }
                 var map = initialize();
                 console.log(map);
