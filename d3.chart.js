@@ -197,7 +197,7 @@ define(['moment', 'underscore', 'app/d3.chart.analog', 'app/d3.chart.digital', '
                 if (mX > 0 && mY > 0 && mX < width) { 
                     var dt = _xScale.invert(mX);
                     var t = dt.getTime();
-                    timeLegend.text(moment(dt).format('DD MMM h:mm:ss'));
+                    timeLegend.text(moment(dt).format('DD MMM h:mm:ss') + " " + dt.getTime());
 
                     // set map marker 
                     var obj = options.locs[findIndex(options.locs, t, 0, options.locs.length, function(d) { return d.ts; })]; 
